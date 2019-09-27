@@ -1,5 +1,5 @@
 ![Workshops](../banners/aws.png)  ![Workshops](images/personalize.png)  
-**Last Updated:** May 2019
+**Last Updated:** September 2019
 
 # Personalize Your Recommendations
 
@@ -13,7 +13,7 @@ This lab will walk you through the following:
 
 - Deploy and configure a *Video Recommendation* application
 - Setting up a Jupyter Notebook environment for the Amazon Personalize Service Preview
-- Downloading and preparing training data, based on the Movie Lens data set
+- Downloading and preparing training data, based on the Movie Lens 100k data set
 - Importing prepared data into Amazon Personalize
 - Building an ML model based upon the Hierarchical Recurrent Neural Network algorithm (HRNN)
 - Testing your model by deploying an Amazon Personalize campaign
@@ -35,23 +35,31 @@ This lab will walk you through the following:
 
   ![Create key pair](images/createKeyPair.png)
 
-4. Click on the **Services** dropdown and select **CloudFormation** from the list of all services by entering CloudFormation into the Find services box.  This will bring you to the Amazon CloudFormation console home page.
+4. **Optional** - should you wish to later SSH in to your instance, you need to have your downloaded key-pair from earlier in an accessible location.  It also must not be publicly readable, so if you are on a Mac or Linux system you can fix this with the following command run from the folder where you stored the key, remembering to replace **myLabKey.pem** with your key name!
+
+  ```bash
+  $ chmod 400 myLabKey.pem
+  ```
+
+5. Click on the **Services** dropdown and select **CloudFormation** from the list of all services by entering CloudFormation into the Find services box.  This will bring you to the Amazon CloudFormation console home page.
 
   ![CFN Service Selection](images/consoleCfnSelect.png)
 
-5. We are going to deploy a pre-built application via a CloudFormation template - this will be a fully-functioning recommendation system, allowing access to multiple Amazon Personalize features.  But it has one drawback - there are no models built into it!  So we will create them in this lab, and when they are ready we will re-configure this application to use them. But first we need to deploy this skeleton application but downloading this file from the workshop repository.  Right-click on the following link and download the template to a file on your local computer, remembering to keep it as a text file with a **.yml** extention.
+6. We are going to deploy a pre-built application via a CloudFormation template - this will be a fully-functioning recommendation system, allowing access to multiple Amazon Personalize features.  But it has one drawback - there are no models built into it!  So we will create them in this lab, and when they are ready we will re-configure this application to use them. But first we need to deploy this skeleton application but downloading this file from the workshop repository.  Right-click on the following link and download the template to a file on your local computer, remembering to keep it as a text file with a **.yml** extention.
 
   https://raw.githubusercontent.com/drandrewkane/AI_ML_Workshops/master/lab-6-Personalize_your_Recommendations/cloudformation_template.yml
 
-6. Click on the **Create Stack** button to start the deployment wizard, and in the **Choose a template** section select **Upload a template to Amazon S3**, click on the **Choose file** button, and select the template file that you just downloaded.  Then click on **Next**.
+7. Click on the **Create Stack** button to start the deployment wizard, and in the **Specify template** section select **Upload a template file**, click on the **Choose file** button, and select the template file that you just downloaded.  Then click on **Next**.
 
   ![Select CFN Template](images/cfnSelectTemplate.png)
 
-7. The next screen asks for more configuration parameters, but only two of these are required: **Stack name** and **KeyName**.  For Stack name enter something simple, such as *LabStack*, and select your previously-defined EC2 kay-pair, the click **Next** (not shown).
+8. The next screen asks for more configuration parameters, but only a few of these are required.  Enter you values for the following, then click **Next** when you're done - you are free to enter new values for the *DjangoAdminLogin* or *DjangoEmailAddress*, but the defaults for these and other parameters are fine.
 
-  ![](images/cfnOtherParams.png)
+  1. **Stack name** - enter something simple, as as *LabStack*
+  2. **Parameter - DjangoAdminPassword** - enter a password of your choice
+  3. **Parameter - KeyName** - select your previously-defined EC2 kay-pair
 
-8. There then follows two more screens.  The first is called *Options*, but we have none to enter so just click on **Next**.  The second is the final *Review* screen - **please verify** that the **KeyName** is the one that you just downloaded, and then click on **Create**.  This will then go and create the environment, which will take around 10-15 minutes minutes.  Unfortunately, we are creating IAM resources, so we cannot continue until it has completed - so read ahead and get a feel for what's coming up next. 
+9. There then follows two more screens.  The first is called *Options*, but we have none to enter so just click on **Next**.  The second is the final *Review* screen - verify the parameters, hit the checkbox next to the statement *"I acknowledge that AWS CloudFormation might create IAM resources with custom names."* and then click on **Create stack**.  This will then go and create the environment, which will take around 10-15 minutes minutes.  Unfortunately, we are creating IAM resources, so we cannot continue until it has completed - so read ahead and get a feel for what's coming up next. 
 
 # Setup your Jupyter Notebook environment
 
@@ -143,102 +151,20 @@ We need to download two files before starting work, which are all stored within 
 
 2. You now have three solutions being built off of the same dataset, and all three will slot into the application later.  Please now go back to the notebook and continue to build your recommendation campaign and do some quick testing - if the notebook solution still hasn't completed then you may continue with the first part of the next section, **Finalise Django Framework Configuration**
 
-# Configure the Video Recommendation App
+# Using the Video Recommendation App
 
-## Finalise Django Framework Configuration
+#### Notes on the Application
 
-There are various components within the application that need some final configuration.  The basics, such as the VPC, the Application Load Balancer, the Auto-Scaling Group and resultant EC2 images, are all good to go, but some configuration is necessary on the Django application framework that is hosting the application.  This needs to be done by connecting into the instance using SSH.
-
-There are many ways to connect to a remote machine using SSH.  This Lab Guide will continue with using SSH at the command line on an Apple Mac computer - your own method for establishing a connection may be different, perhaps using an application such as **Putty** on a Windows-based computer, but once connected the instructions are the same regardless of your platform combination
-
-1. In order to connect you need to have your downloaded key-pair from earlier in an accessible location.  It also must not be publicly readable, so if you are on a Mac or Linux system you can fix this with the following command, remembering to replace **myLabKey.pem** with your key name!
-
-   ```bash
-   $ chmod 400 myLabKey.pem
-   ```
-
-2. Go to the the EC2 console page, go to the **Instances** menu on the left, and find your one running instance.  Select it, and make a note of (or copy) the **IPv4 Public IP** for your instance
-
-   ![](images/selectEC2details.png)
-
-3. Go to your computer CLI, and navigate to the directory containing your key-pair.  Issue the following command to connect via SSH, changing the key-pair filename and IP address as necessary, and you should see results similar to what follows.  You will see a warning about the authenticity of the host then just enter **yes** at the prompt.
-
-   ```bash
-   $ ssh -i myLabKey.pem ec2-user@3.87.13.157
-   
-   The authenticity of host '3.87.13.157 (3.87.13.157)' cannot be established.
-   ECDSA key fingerprint is SHA256:hFLzWhKWXwSevk14ulMwyLJqM7LN7j3Yt5w7NcnNwow.
-   Are you sure you want to continue connecting (yes/no)? yes
-   Warning: Permanently added '3.87.13.157' (ECDSA) to the list of known hosts.
-   
-   Last login: Sun May  5 20:51:33 2019 from 72-21-198-64.amazon.com
-   
-          __|  __|_  )
-          _|  (     /   Amazon Linux 2 AMI
-         ___|\___|___|
-   
-   https://aws.amazon.com/amazon-linux-2/
-   [ec2-user@ip-10-192-11-223 ~]$
-   ```
-
-4. Navigate to the root of the Django project, and configure the single-line run script to use the private IP address of the EC2 instance.  This is on the previous EC2 details screen just underneath the Public IP - you will need this again, so keep it handy.  Simply replace the IP address with yours, keeping the trailing **:8000** - my server's private IP is 10.192.11.223.
-
-   ```bash
-   $ cd personalize-video-recs/videorecs/
-   $ vi runmyserver
-   --- {editor screen} ---
-   python manage.py runserver 10.192.11.223:8000
-   ```
-
-5. Django only allows access via pre-defined source IP addresses.  Naturally, these could be open to the internet, but they recommend only exposing it the instance private IP address (for internal calls) and to your front-end load balancer.  You already have a reference to the private IP address, so you now need to extract the Load Balancer DNS entry.  Go back to the EC2 console screen, but this time select **Load Balancers** on the left-hand menu; select your Application Load Balancer and in the details screen that comes up select the DNS name and store it for later.
-
-   ![](images/loadbalancerDNS.png)
-
-6. Whilst we're collecting data, move to the **Amazon RDS** service section of the console, select **Databases** from the left-hand menu and select the Lab database called **amazonpersonalizelab** from the list.  In the details screen copy the DNS endpoint for the database and store it for later.
-
-   ![](images/rdsDNS.png)
-
-7. Go back to your SSH session window.  You now need to edit two entries in the file - one is called **ALLOWED_HOSTS** and the other is **HOST** entry in the **DATABASES** section.  Edit the file, then in the editor window find the two relevant lines and edit them so that they look like that shown below, but with your IP and DNS entries
-
-   ```bash
-   $ vi videorecs/settings.py
-   --- {ALLOWED_HOSTS line - server private IP and ALB DNS} ---
-   
-   ALLOWED_HOSTS = ['10.192.11.151', 'TestS-Appli-ADS60FMCKPMG-1862985075.us-east-1.elb.amazonaws.com']
-   
-   --- {DATABASES HOSTS line - RDS DNS} ---
-   
-           'HOST': 'amazonpersonalizelab.c0azewoaia5d.us-east-1.rds.amazonaws.com',
-   ```
-
-8. **[OPTIONAL STEP]**
-
-   The RDS database is postgres, and we have included the **pgcli** tool with this deployment, as you may wish to look at the database schema structure, examine the data that was in the RDS snapshot, or potentially update this all after you have customised the Django application for your own needs.  If you wish to use it then you need to edit the startup script for the utility to point to the RDS DNS entry.  You also need to know the password, which you may have noticed in the **settings.py** file, and it's **recPassw0rd**
-   
-   ```bash
-   $ vi pgcli
-   --- {editor screen} ---
-   /home/ec2-user/.local/bin/pgcli -h amazonpersonalizelab.c0azewoaia5d.us-east-1.rds.amazonaws.com -u vidrecdemo -d videorec
-   ```
+1. The RDS database is postgres, and we have included the **pgcli** tool with this deployment, as you may wish to look at the database schema structure, examine the data that was in the RDS snapshot, or potentially update this all after you have customised the Django application for your own needs.  There is a startup script for this in the **/home/ec2-user/personalize-video-recs/videorecs/** folder, which is the root of the whole Django framework application.
+2. **CURRENT BUG** - when the CloudFormation template is complete there is a running web-application, but for some (currently unknown) reason it fails its health check.  However, SSH'ing into the instance will show the web-server job running, configuration is correct, etc.  If you get a *Bad Gateway* error when you navigate to the application, please terminate the EC2 instance - auto-scaling will bring another back to life, which always seems to be fine.
 
 ## Running the Video Recommendation App
 
-1.  You are now ready to run the application server!  Simply execute the **runmyserver** script, and you should see status messages appearing quickly - these initial ones are the Load Balancer health-checks, and after a minute or so the instance should be declared healthy by the Load Balancer Target Group.  Note, you will see some warnings around the *psycopg2* component, but this can be ignored.
+1.  The application server should already running running.  You can find the two URLs required for different aspects of the app in the CloudFormation outputs panel.
 
-   ```bash
-   $ ./runmyserver
+   ![](images/appUrlOutputs.png)
    
-   System check identified no issues (0 silenced).
-   May 06, 2019 - 14:53:03
-   Django version 1.11.18, using settings 'videorecs.settings'
-   Starting development server at http://10.192.11.223:8000/
-   Quit the server with CONTROL-C.
-   [06/May/2019 14:53:14] "GET /recommend/ HTTP/1.1" 200 2893
-   [06/May/2019 14:53:32] "GET /recommend/ HTTP/1.1" 200 2893
-   [06/May/2019 14:53:44] "GET /recommend/ HTTP/1.1" 200 2893
-   ```
-
-2. The URL of the server is your ALB followed by the **/recommend/** path, although there is also an **/admin/** path configured that we'll use later.  For now connect to your server - in my example the server can be found at http://TestS-Appli-ADS60FMCKPMG-1862985075.us-east-1.elb.amazonaws.com/recommend
+2. The URL of the application is your ALB followed by the **/recommend/** path, although there is also an **/admin/** path configured that we'll use later.  For now connect to your application using the *AppEntrypoint* URL
 
 3. You should see the following screen in your browser - no *Model Precision Metrics* are available, as we haven't added any models yet to the application.  You can also see that documentation for this is present, but be aware that it may not be 100% up to date with coding changes on the demo.
 
@@ -270,27 +196,14 @@ The application uses the Django Administration feature to define models that are
 
 - **Recommendations** - standard recommendations, allowing different 2 models to be compared at once
 - **Personal Ranking** - re-ranks popular films in a genre, with a single model on-screen at once
-- **Similar Items** - shows items similar to others, with a single model on-screen at once.  You can optionally send this list through a *Personal Ranking* model if you have one definedA
+- **Similar Items** - shows items similar to others, with a single model on-screen at once.  You can optionally send this list through a *Personal Ranking* model if you have one defined
 
 Each of these modes allows multiple models of their type to be used, but each mode can only show one or two different models simultaneously - however, you can choose any configured model at any time.
 
-1. By default the admin user within Django does not exist - you need to create one.  In your SSH session, ensure that the web server is running again, and then create a second SSH session.  In that session, create the first superuser using the following commands.  Please note down your username and password, as no-one will be able to retrieve it for you; in the Lab we suggest using **admin** and **DoNotH@ckMe** accordingly, but use any email address you like.  You can then close the second SSH session
-
-   ```bash
-   $ cd ~/personalize-video-recs/videorecs/
-   $ python manage.py createsuperuser
-   
-   Username (leave blank to use 'ec2-user'): admin
-   Email address: anyone@email.com
-   Password:
-   Password (again):
-   Superuser created successfully.
-   ```
-
-2. Login to the Django Administration site.  This is at the same URL as the main application, but replace **/recommend** with **/admin** at the end of the URL.  This will bring up the following screen, so login now with the credentials that you just created
+1. Login to the Django Administration site.  This is at the same URL as the main application, but replace **/recommend** with **/admin** at the end of the URL, as shown previously in the CloudFormation Outputs panel.  This will bring up the following screen, so login now with the credentials that you supplied when you ran the CloudFormation template:
 
    ![](images/djangoAdmin.png)
-
+   
 3. This brings up the *Site Administration* screen, which show entries for Groups and Users (which we don't need), but also a section called **Recommend** where you can add **Personalize models** to the app.  Click on **+Add** link to begin to add a new model
 
 4. Back on the AWS Console, go to the **Amazon Personalize** service console, select the **personalize-recs-dataset-group** and then on the left-hand menu click **Campaigns**.  This will show your **personalize-lab-recs-campaign**, along with the campaigns for the other two solutions if you've created them.  If you've created all three then you should see something like this, but for your other two campaigns may already have been created

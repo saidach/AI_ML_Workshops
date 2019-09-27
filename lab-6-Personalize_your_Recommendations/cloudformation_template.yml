@@ -4,10 +4,28 @@ Description:
   route on the public subnets.
 
 Parameters:
-  EnvironmentName:
+  AppEnvironmentName:
     Description: An environment name that will be prefixed to resource names
     Type: String
     Default: "Amazon Personalize Lab"
+
+  DjangoAdminLogin:
+    Description: Please enter the name of your Django Administrator User (case sensitive)
+    Type: String
+    Default: "Admin"
+
+  DjangoAdminPassword:
+    NoEcho: true
+    Description: Please enter the login password for your Django Administrator User (4-12 chars; lower-case,  upper-case and numerals)
+    Type: String
+    MinLength: 4
+    MaxLength: 12
+    AllowedPattern: ^[a-zA-Z0-9]*$
+
+  DjangoEmailAddress:
+    Description: Please enter the email address for your Django Administrator User
+    Type: String
+    Default: "blank@example.com"
 
   VpcCIDR:
     Description: Please enter the IP range (CIDR notation) for this VPC
@@ -51,7 +69,7 @@ Parameters:
   InstanceAMI:
     Description: EC2 instance AMI for auto-scaling
     Type: String
-    Default: ami-059f8e2bf146b1e8f
+    Default: ami-0a1bbc59157225e69
     
   SnapshotArn:
     Description: ARN of the Public RDS Snapshot
@@ -67,14 +85,14 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Ref AppEnvironmentName
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Ref AppEnvironmentName
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -91,7 +109,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+          Value: !Sub ${AppEnvironmentName} Public Subnet (AZ1)
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -102,7 +120,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+          Value: !Sub ${AppEnvironmentName} Public Subnet (AZ2)
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -113,7 +131,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+          Value: !Sub ${AppEnvironmentName} Private Subnet (AZ1)
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
@@ -124,7 +142,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+          Value: !Sub ${AppEnvironmentName} Private Subnet (AZ2)
 
   NatGateway1EIP:
     Type: AWS::EC2::EIP
@@ -144,7 +162,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Public Routes
+          Value: !Sub ${AppEnvironmentName} Public Routes
 
   DefaultPublicRoute:
     Type: AWS::EC2::Route
@@ -172,7 +190,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Private Routes (AZ1)
+          Value: !Sub ${AppEnvironmentName} Private Routes (AZ1)
 
   DefaultPrivateRoute1:
     Type: AWS::EC2::Route
@@ -193,7 +211,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Private Routes (AZ2)
+          Value: !Sub ${AppEnvironmentName} Private Routes (AZ2)
 
   DefaultPrivateRoute2:
     Type: AWS::EC2::Route
@@ -211,12 +229,13 @@ Resources:
   ApplicationLoadBalancer:
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
     Properties:
+      Name: 'Personalize-Demo-ALB'
       Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Personalize ALB
+          Value: !Sub ${AppEnvironmentName} Personalize ALB
 
   ALBListener:
     Type: 'AWS::ElasticLoadBalancingV2::Listener'
@@ -257,7 +276,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} ALB Security Group
+          Value: !Sub ${AppEnvironmentName} ALB Security Group
           
   InstanceSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -280,7 +299,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName} Server Security Group
+          Value: !Sub ${AppEnvironmentName} Server Security Group
 
   AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
@@ -289,10 +308,17 @@ Resources:
       LaunchConfigurationName: !Ref LaunchConfig
       MinSize: '1'
       MaxSize: '1'
-      DesiredCapacity: 1
+      DesiredCapacity: '1'
+      Tags:
+        - Key: Name
+          Value: !Sub ${AppEnvironmentName}
+          PropagateAtLaunch: 'true'
+        - Key: Personalize
+          Value: Demo
+          PropagateAtLaunch: 'true'
       TargetGroupARNs:
         - !Ref ALBTargetGroup
-    
+
   LaunchConfig: 
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties: 
@@ -303,6 +329,22 @@ Resources:
       IamInstanceProfile: !Ref PersonalizeInstanceProfile
       SecurityGroups:
         - !Ref InstanceSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/sh
+          privateIP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+          albDNS=$(aws elbv2 describe-load-balancers --region us-east-1 --query 'LoadBalancers[?LoadBalancerName==`Personalize-Demo-ALB`].DNSName' --output text)
+          rdsDNS=$(aws rds describe-db-instances --region us-east-1 --query 'DBInstances[?DBName==`videorec`].Endpoint.Address' --output text)
+          cd /home/ec2-user/personalize-video-recs/videorecs
+          sed -i s/PRIVATEIP/$privateIP/g runmyserver
+          sed -i s/POSTGRESDNS/$rdsDNS/g pgcli
+          cd videorecs
+          sed -i s/PRIVATEIP/$privateIP/g settings.py
+          sed -i s/ALBDNS/$albDNS/g settings.py
+          sed -i s/POSTGRESDNS/$rdsDNS/g settings.py
+          runuser -l ec2-user -c 'cd personalize-video-recs/videorecs; ./runmyserver > /dev/null 2>&1 &'
+          sleep 5
+          runuser -l ec2-user -c 'cd personalize-video-recs/videorecs; python manage.py createsuperuser2 --username ${DjangoAdminLogin} --password ${DjangoAdminPassword} --noinput --email "${DjangoEmailAddress}" '
 
   PersonalizeEC2Role:
     Type: 'AWS::IAM::Role'
@@ -321,6 +363,8 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/service-role/AmazonPersonalizeFullAccess
         - arn:aws:iam::aws:policy/IAMReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess
          
   PersonalizeInstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
@@ -374,16 +418,16 @@ Resources:
           SourceSecurityGroupId: !Ref InstanceSecurityGroup
       Tags:
       - Key: Name
-        Value: !Sub ${EnvironmentName} RDS Security Group
+        Value: !Sub ${AppEnvironmentName} RDS Security Group
 
   DbSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: !Join [ "", [ "RDS Subnet Group for ", !Ref EnvironmentName ] ]
+      DBSubnetGroupDescription: !Join [ "", [ "RDS Subnet Group for ", !Ref AppEnvironmentName ] ]
       SubnetIds: [!Ref PrivateSubnet1, !Ref PrivateSubnet2]
       Tags:
       - Key: Name
-        Value: !Ref EnvironmentName
+        Value: !Ref AppEnvironmentName
         
   DbInstance:
     Type: AWS::RDS::DBInstance
@@ -408,33 +452,13 @@ Resources:
       - !Ref RDSAccessSecurityGroup
       Tags:
       - Key: Name
-        Value: !Ref EnvironmentName
+        Value: !Ref AppEnvironmentName
 
 Outputs:
-  VPC:
-    Description: A reference to the created VPC
-    Value: !Ref VPC
+  AppEntrypoint:
+    Description: User entrypoint for web-application
+    Value: !Join [ "", [ !GetAtt ApplicationLoadBalancer.DNSName, "/recommend" ] ]
 
-  PublicSubnets:
-    Description: A list of the public subnets
-    Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2 ]]
-
-  PrivateSubnets:
-    Description: A list of the private subnets
-    Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
-
-  PublicSubnet1:
-    Description: A reference to the public subnet in the 1st Availability Zone
-    Value: !Ref PublicSubnet1
-
-  PublicSubnet2:
-    Description: A reference to the public subnet in the 2nd Availability Zone
-    Value: !Ref PublicSubnet2
-
-  PrivateSubnet1:
-    Description: A reference to the private subnet in the 1st Availability Zone
-    Value: !Ref PrivateSubnet1
-
-  PrivateSubnet2:
-    Description: A reference to the private subnet in the 2nd Availability Zone
-    Value: !Ref PrivateSubnet2
+  AppEntrypointAdmin:
+    Description: Admin entrypoint for web-application
+    Value: !Join [ "", [ !GetAtt ApplicationLoadBalancer.DNSName, "/admin" ] ]
