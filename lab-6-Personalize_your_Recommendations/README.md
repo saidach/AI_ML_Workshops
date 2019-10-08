@@ -20,12 +20,15 @@ This lab will walk you through the following:
 - Adding your campaign to Video Recommendation application
 
 **Note: We have secured accounts with some pre-provisioned infrastructure necessary for the lab and using us-east-1 region for the entire lab work.**
+
 # Get your AWS account hash and login via console
 
 1. Get account hash from the instructor, then right click and open the following link in new tab: [event link](https://dashboard.eventengine.run)
+
 ![Landing Page](images/enterhashproceed.png)
 
 2. Click *AWS Console* in top right corner in the following screeen
+
 ![Landing Page](images/openawsconsole.png)
 
 3. Then click *Open Console* to open AWS Console.
@@ -54,7 +57,7 @@ This lab will walk you through the following:
 
 # Launch pre-provisioned Sagemaker notebook instance
 
-1. Open the [link](https://console.aws.amazon.com/sagemaker/home?region=us-east-1#/notebook-instances) to locate pre-provisioned notebook instances
+1. Open the [link](https://console.aws.amazon.com/sagemaker/home?region=us-east-1#/notebook-instances) to locate pre-provisioned SageMaker notebook instances
 
 2. Launch the Sagemaker notebook Jupyter of the instance with name *Personalize-lab-notebook*
 
