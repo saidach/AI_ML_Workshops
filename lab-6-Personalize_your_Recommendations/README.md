@@ -46,7 +46,7 @@ This lab will walk you through the following:
 
 ![Landing Page](images/recommendationapp.png)
 
-**Note: if you see 502 bad gateway click [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance as shown below**
+**Note: if you see 502 bad gateway click [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance with the name *Amazon Personalize Lab* as shown below**
 
 ![Landing Page](images/recycleinstance.png)
 
