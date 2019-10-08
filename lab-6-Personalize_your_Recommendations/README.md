@@ -32,7 +32,7 @@ This lab will walk you through the following:
 
 ![Landing Page](images/openawsconsolelink.png)
 
-3. Right click and open the [link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filteringText=&filteringStatus=active&viewNested=true&hideStacks=false) in new tab to open CloudFormation page.
+3. Right click and open the following link in new tab to open CloudFormation page:[link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filteringText=&filteringStatus=active&viewNested=true&hideStacks=false)
 
 4. On Stacks Page, click on the stack hyperlink of the stack that begins with name *mod-*
 
