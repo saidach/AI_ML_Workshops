@@ -25,8 +25,10 @@ This lab will walk you through the following:
 1. Get account hash from the instructor, then right click and open the following link in new tab: [event link](https://dashboard.eventengine.run)
 ![Landing Page](images/enterhashproceed.png)
 
-2. Click *AWS Console* in top right corner in the following screeen, then click *Open Console* to open AWS Console.
+2. Click *AWS Console* in top right corner in the following screeen
 ![Landing Page](images/openawsconsole.png)
+
+3. Then click *Open Console* to open AWS Console.
 
 ![Landing Page](images/openawsconsolelink.png)
 
