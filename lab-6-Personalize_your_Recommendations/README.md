@@ -46,23 +46,21 @@ This lab will walk you through the following:
 
 ![Landing Page](images/recommendationapp.png)
 
-**Note: if you see 502 bad gateway click [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance with the name *Amazon Personalize Lab* as shown below**
+**Note: if you see 502 bad gateway click [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance with the name *"Amazon Personalize Lab"* as shown below**
 
 ![Landing Page](images/recycleinstance.png)
 
-  Due to an unknown bug the app doesnt work fine during the first deployment but recycle the instance always helps.
+  Due to an unknown bug the app doesnt work fine during the first deployment sometimes but recycling the instance always helps.
 
 # Launch pre-provisioned Sagemaker notebook instance
 
-1. Click on **Amazon SageMaker** from the list of all services by entering *Sagemaker* into the **Find services** box.  This will bring you to the Amazon SageMaker console homepage.  
+1. Open the [link](https://console.aws.amazon.com/sagemaker/home?region=us-east-1#/notebook-instances) to locate pre-provisioned notebook instances
 
-![Sagemaker console](images/consoleSMSelect.png)
-
-2. Launch the Sagemaker notebook jupyter of the instance with name *Personalize-lab-notebook*
+2. Launch the Sagemaker notebook Jupyter of the instance with name *Personalize-lab-notebook*
 
 ![Open Notebook](images/openNotebook1.png)
 
-3. Open the personalize notebook as shown below
+3. From the page that opened lauch personalize notebook as shown below
 
 ![Open Notebook](images/opennotebookexample.png)
 
