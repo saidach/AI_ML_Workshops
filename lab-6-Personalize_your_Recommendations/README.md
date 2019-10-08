@@ -60,7 +60,7 @@ This lab will walk you through the following:
 
 ![Open Notebook](images/openNotebook1.png)
 
-3. From the page that opened lauch personalize notebook as shown below
+3. From the page that opened lauch personalize notebook in the folder: lab-6-Personalize_your_Recommendations as shown below by clicking it.
 
 ![Open Notebook](images/opennotebookexample.png)
 
