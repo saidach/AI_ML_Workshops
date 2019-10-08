@@ -98,7 +98,7 @@ This lab will walk you through the following:
 
 ## Running the Video Recommendation App
 
-1.  The application server should already running running.  You can find the two URLs required for different aspects of the app in the CloudFormation outputs panel.
+1.  The application server should already running running.  You have already noted down the URLs required for different aspects of the app in the CloudFormation outputs panel in preceeding steps.
 
    ![](images/appUrlOutputs.png)
    
