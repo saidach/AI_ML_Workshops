@@ -21,20 +21,31 @@ This lab will walk you through the following:
 
 **Note: We have secured accounts with some pre-provisioned infrastructure necessary for the lab and using us-east-1 region for the entire lab work.**
 # Get your AWS account hash and login via console
+
 1. Get account hash from the instructor, then right click and open the following link in new tab: [event link](https://dashboard.eventengine.run)
 ![Landing Page](images/enterhashproceed.png)
+
 2. Click *AWS Console* in top right corner in the following screeen, then click *Open Console* to open AWS Console.
 ![Landing Page](images/openawsconsole.png)
+
 ![Landing Page](images/openawsconsolelink.png)
+
 3. Right click and open the [link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filteringText=&filteringStatus=active&viewNested=true&hideStacks=false) in new tab to open CloudFormation page.
+
 4. On Stacks Page, click on the stack hyperlink of the stack that begins with name *mod-*
+
 ![Open cfn Stacks](images/openstack.png)
+
 5. Click outputs tab and make a note of key values of AppEntrypoint and AppEntryPointAdmin which will be used later in this lab.
+
 ![Landing Page](images/cfn-outputs.png)
+
 6. Open the AppEntrypoint in browser to make sure the app is working fine.
+
 ![Landing Page](images/recommendationapp.png)
 
 **Note: if you see 502 bad gateway click [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance as shown below**
+
 ![Landing Page](images/recycleinstance.png)
 
   Due to an unknown bug the app doesnt work fine during the first deployment but recycle the instance always helps.
