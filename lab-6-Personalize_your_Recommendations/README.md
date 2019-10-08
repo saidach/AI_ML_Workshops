@@ -11,97 +11,38 @@ Machine learning is being increasingly used to improve customer engagement by po
 
 This lab will walk you through the following:
 
-- Deploy and configure a *Video Recommendation* application
-- Setting up a Jupyter Notebook environment for the Amazon Personalize Service Preview
+- Get your AWS account hash and login via console.
+- Launch SageMaker Notebook instance for the Amazon Personalize Service 
 - Downloading and preparing training data, based on the Movie Lens 100k data set
 - Importing prepared data into Amazon Personalize
 - Building an ML model based upon the Hierarchical Recurrent Neural Network algorithm (HRNN)
 - Testing your model by deploying an Amazon Personalize campaign
 - Adding your campaign to Video Recommendation application
 
-# Deploy the Video Recommendation App
+**Note: We have secured accounts with some pre-provisioned infrastructure necessary for the lab and using us-east-1 region for the entire lab work.**
+# Get your AWS account hash and login via console
+1. Get account hash from the instructor then click [here](https://dashboard.eventengine.run) to enter your account hash
+2. Then click *AWS Console* in top right corner, in the following screeen click *Open Console* to open AWS Console.
+3. In AWS Console search bar, search for *CloudFormation* and click on it to open CloudFormation service page.
+4. On Stacks Page, click on the stack hyper link of the stack that begins with name *mod-*
+5. Click outputs tab and make a note of key values of AppEntrypoint and AppEntryPointAdmin
+6. Open the AppEntrypoint in browser to make sure the app is working fine.
 
-## Deploy the "Video Recommendation" Application
+# Launch pre-provisioned Sagemaker notebook instance
 
-1. Whilst this application could be deployed anywhere, it uses both an EC2 Amazon Machine Image (AMI) and RDS Snapshot that have been stored in the North Virgina Region of AWS (us-east-1).  Hence, please make sure that the Region selected in the AWS Console is alway **US East (N.Virginia)**, as shown in the following diagram.  The workshop will only function correctly if the EC2 configuration, CloudFormation template executiion and SageMaker notebook are all using this AWS Region.
-
-  ![EC2 Select](images/changeRegion.png)
-
-2. The appication will run on an EC2 instance, but at some point we will need to connect to the server in order to carry out some configuration task.  To do this we need to have an *EC2 Key Pair* configured on the server that you also have access to on your computer; hence, we need to create and download a new one.  Click on **EC2** from the list of all services by entering EC2 into the Find services box.  This will bring you to the Amazon EC2 console home page.
-
-  ![EC2 Select](images/consoleEC2Select.png)
-
-3. On the left-hand menu scroll down until you see **Key Pairs** and select it, and in the resulting dialog click on the **Create Key Pair** button.  This will bring up a **Create Key Pair** dialog, where you need to enter the name of a new key pair - call it *myLabKey* and hit **Create**.  This should automatically download the file, or you may need to manually do so.
-
-  ![Create key pair](images/createKeyPair.png)
-
-4. **Optional** - should you wish to later SSH in to your instance, you need to have your downloaded key-pair from earlier in an accessible location.  It also must not be publicly readable, so if you are on a Mac or Linux system you can fix this with the following command run from the folder where you stored the key, remembering to replace **myLabKey.pem** with your key name!
-
-  ```bash
-  $ chmod 400 myLabKey.pem
-  ```
-
-5. Click on the **Services** dropdown and select **CloudFormation** from the list of all services by entering CloudFormation into the Find services box.  This will bring you to the Amazon CloudFormation console home page.
-
-  ![CFN Service Selection](images/consoleCfnSelect.png)
-
-6. We are going to deploy a pre-built application via a CloudFormation template - this will be a fully-functioning recommendation system, allowing access to multiple Amazon Personalize features.  But it has one drawback - there are no models built into it!  So we will create them in this lab, and when they are ready we will re-configure this application to use them. But first we need to deploy this skeleton application but downloading this file from the workshop repository.  Right-click on the following link and download the template to a file on your local computer, remembering to keep it as a text file with a **.yml** extention.
-
-  https://raw.githubusercontent.com/drandrewkane/AI_ML_Workshops/master/lab-6-Personalize_your_Recommendations/cloudformation_template.yml
-
-7. Click on the **Create Stack** button to start the deployment wizard, and in the **Specify template** section select **Upload a template file**, click on the **Choose file** button, and select the template file that you just downloaded.  Then click on **Next**.
-
-  ![Select CFN Template](images/cfnSelectTemplate.png)
-
-8. The next screen asks for more configuration parameters, but only a few of these are required.  Enter you values for the following, then click **Next** when you're done - you are free to enter new values for the *DjangoAdminLogin* or *DjangoEmailAddress*, but the defaults for these and other parameters are fine.
-
-  1. **Stack name** - enter something simple, as as *LabStack*
-  2. **Parameter - DjangoAdminPassword** - enter a password of your choice
-  3. **Parameter - KeyName** - select your previously-defined EC2 kay-pair
-
-9. There then follows two more screens.  The first is called *Options*, but we have none to enter so just click on **Next**.  The second is the final *Review* screen - verify the parameters, hit the checkbox next to the statement *"I acknowledge that AWS CloudFormation might create IAM resources with custom names."* and then click on **Create stack**.  This will then go and create the environment, which will take around 10-15 minutes minutes.  Unfortunately, we are creating IAM resources, so we cannot continue until it has completed - so read ahead and get a feel for what's coming up next. 
-
-# Setup your Jupyter Notebook environment
-
-## Launching a Jupyter Notebook using Amazon SageMaker
-
-1. Click on **Amazon SageMaker** from the list of all services by entering *Sagemaker* into the **Find services** box.  This will bring you to the Amazon SageMaker console homepage.  In another browser tab or window, navigate to the **IAM** console homepage, as we'll need that shortly.
+1. Click on **Amazon SageMaker** from the list of all services by entering *Sagemaker* into the **Find services** box.  This will bring you to the Amazon SageMaker console homepage.  
 
 ![Sagemaker console](images/consoleSMSelect.png)
 
-2. To create a new Jupyter notebook instance, go to **Notebook instances** in the Amazon SageMaker console, and click the **Create notebook instance** button at the top of the browser window.
-
-   ![Create notebook instance](images/Picture02.png)Type _[Name]-lab-notebook_ into the **Notebook instance name** text box, and then _ml.t2.medium_ into the **Notebook instance type** field.  Note, for this lab the majority of the work is performed by the Amazon Personalize service and not by your notebook instance, so there is no need to launch a large, compute-optimized C5 or GPU-based instance type - please just use the instance type specified here, as that's all that you need, and using these more powerful, more expensive instance families will not actually help you to complete the workshop any faster.
-
-3. In the _IAM role_ field in **Permissions and encryption** section choose _Enter a custom IAM role ARN_.  Now go over into your open **IAM** tab or window, click in the *Search IAM* field, and then enter **AmazonLab** as the search term.  Select the full role name for SageMaker, being careful not to select the *Delete* or *Edit* options.
-
-   ![Open Notebook](images/findSagemakerRole.png)
-
-4. On the resulting detail screen copy the **Role ARN** value - this role will give your SageMaker notebook sufficient IAM priviledges, and full access to both the Personalize and S3 services.  Note, for a Production system you would most likely restrict this role to specific S3 buckets as per your internal requirements, but this workshop allows access to any S3 bucket.  You can now close this tab or window
-
-5. Go back to your SageMaker screen, and in the *Custom IAM role ARN* field paste in the IAM ARN that you copied in the previous step, scroll down and click on **Create Notebook Instance**
-
-6. Wait until the notebook instance status is **InService**. This will take a few minutes once the creation process has started.  Then click on **Open Jupyter** - whilst you're waiting you can perform step #1 of the next section to copy some files from Git
+2. Launch the Sagemaker notebook with name *Personalize-lab-notebook*
 
 ![Open Notebook](images/openNotebook.png)
 
-### Downloading required additional files
+3. Open the notebook as shown below
 
-We need to download two files before starting work, which are all stored within the Lab's Git repository:
+![Open Notebook](images/openNotebook.png)
 
-- the Notebook file that contains the lab - **personalize_sample_notebook.ipynb**
-- a file that is part of the MovieLens dataset - **u.item** - that has been edited slightly to remove some control characters that cause on of the _pandas_ library calls to fail, and also to include working URLs for the various movie posters that our application will show later
 
-1. Go to the Git repository address, https://github.com/drandrewkane/AI_ML_Workshops, navigate to the **Lab 6** and download the files called **u.item** and **personalize_sample_notebook.ipynb** respectively.  Use any method that you are comfortable with, but do not clone the whole repository as it is quite large - for instance, try opening the files within Git in RAW format and saving them locally (be careful to maintain the correct file extentions)
-2. In the notebook, assuming the status is now **InService**, and click on the **Upload** button, and in the dialog select the two files from the location that you stored them and upload them.
-
-![Upload files](images/uploadFiles.png)
-
-3. Click on each of the two **Upload** buttons to actually upload the files, waiting for the first to complete before starting the second.
-
-![Upload files part-2](images/uploadFiles2.png)
-
-4. Once both are upload you can click on the notebook **.ipynb** file and the lab notebook will open, and you can now begin to work through the lab notebook.
 
 ### Working Through a Jupyter Notebook
 
@@ -125,38 +66,10 @@ We need to download two files before starting work, which are all stored within 
 
 # Creating Parallel Solutions
 
-## Create Item-to-Item Similarities Solution
+## Create Item-to-Item Similarities Solution and Personal Ranking Solution
 
-1. Using the same methods as before, go to the Services drop-down in the console and navigate to the **Amazon Personalize** service in another tab, and select **Dataset groups**.  You will see the dataset group that you created earlier, and click on the name of your dataset group.
+1. You can create the Item-to-Item Similarities Solution and Personal Ranking Solution using a jupyter notebook or via AWS console, but we are skipping this part due to time constraints.
 
-    ![Dataset groups](images/datasetGroups.png)
-
-2. The left-hand side, which will show you the solution that you're currently creating via your notebook.  Then, select **Solutions and recipes**, then click on the **Create solution** button.
-
-   ![Solution list](images/solutionList.png)
-
-3. Enter a suitable name for this solution, such as *similar-items-solutions*, select **Manual** recipe selection, then choose the **aws-sims** recipe and click **Next** - we don't need to change anything in the advanced configuration section
-
-   ![Create solution](images/solutionConfig.png)
-
-4. In the following screen just hit the **Finish** button and a new solution version will start to be created.
-
-   
-
-## Create Personal Ranking Solution
-
-1. Let's do exactly the same thing again, but this time we'll create a ranking solition.  From the **Solutions and Recipes** screen that you are on, click **Create solution**, give it a name like *rankings-solution*, ensure it's a **Manual** recipe selection but this time select the **aws-personalized-ranking** recipe.  Click **Next** and **Finished** as before
-
-   ![](images/recipeRanking.png)
-
-2. You now have three solutions being built off of the same dataset, and all three will slot into the application later.  Please now go back to the notebook and continue to build your recommendation campaign and do some quick testing - if the notebook solution still hasn't completed then you may continue with the first part of the next section, **Finalise Django Framework Configuration**
-
-# Using the Video Recommendation App
-
-#### Notes on the Application
-
-1. The RDS database is postgres, and we have included the **pgcli** tool with this deployment, as you may wish to look at the database schema structure, examine the data that was in the RDS snapshot, or potentially update this all after you have customised the Django application for your own needs.  There is a startup script for this in the **/home/ec2-user/personalize-video-recs/videorecs/** folder, which is the root of the whole Django framework application.
-2. **CURRENT BUG** - when the CloudFormation template is complete there is a running web-application, but for some (currently unknown) reason it fails its health check.  However, SSH'ing into the instance will show the web-server job running, configuration is correct, etc.  If you get a *Bad Gateway* error when you navigate to the application, please terminate the EC2 instance - auto-scaling will bring another back to life, which always seems to be fine.
 
 ## Running the Video Recommendation App
 
@@ -174,21 +87,8 @@ We need to download two files before starting work, which are all stored within 
 
    ![](images/appRecNoModels.png)
 
-At this point we require the solution that is being built in the notebook to complete and the associated campaign to have been created - until that time we cannot move forward, so you may wish to get some refreshments if you are still waiting for those two steps to complete.
+At this point we require the solution that is being built in the notebook to complete and the associated campaign to have been created - until that time we cannot move forward.
 
-## Create Additional Personalize Campaigns
-
-If you have built the additional two Personalize models, for Item-to-Item Similarities and Personal Rankings, then you'll need to create the associated campaigns for these solutions, as it is the campaigns that we will add to the application.  If those solutions have been built then continue with these steps, but if not you can always come back to these steps later before adding them to the application.
-
-1. In the AWS Console, go to the **Amazon Personalize** service console, click on **Dataset groups** link on the left-hand menu, and select the **personalize-recs-dataset-group** link, then click into the **Campaigns** menu item on the left.  Select **Create campaign**
-
-   ![](images/campaignSingle.png)
-
-2. First, we want to build the campaign for the *Similar Items* model - enter a name for the campaign, such as *similar-items-campaign*, select via the drop-down that solution that you previously built in the console, *similar-items-solution*, and ensure that minimum TPS is set to 1.  Hit **Create campaign**
-
-   ![](images/createCampaign.png)
-
-3. Now build the campaign for the *Personal Rankings* model - follow the same steps as before, but this time use *rankings-campaign* for the campaign name and select the *rankings-solution* model in the drop-down control.
 
 ## Plug In the Recommendation Model(s)
 
@@ -206,7 +106,7 @@ Each of these modes allows multiple models of their type to be used, but each mo
    
 3. This brings up the *Site Administration* screen, which show entries for Groups and Users (which we don't need), but also a section called **Recommend** where you can add **Personalize models** to the app.  Click on **+Add** link to begin to add a new model
 
-4. Back on the AWS Console, go to the **Amazon Personalize** service console, select the **personalize-recs-dataset-group** and then on the left-hand menu click **Campaigns**.  This will show your **personalize-lab-recs-campaign**, along with the campaigns for the other two solutions if you've created them.  If you've created all three then you should see something like this, but for your other two campaigns may already have been created
+4. Back on the AWS Console, go to the **Amazon Personalize** service console, select the **personalize-recs-dataset-group** and then on the left-hand menu click **Campaigns**.  This will show your **personalize-lab-recs-campaign**.  If you've created all three then you should see something like this, but for your other two campaigns may already have been created
 
    ![](images/campaignList.png)
 
@@ -244,18 +144,6 @@ The three models that you should build are as follows:
 
 Observations are that demographics are absolutely not a good indicator for movies recommendations, nor for things like book recommendations - this isn't an issue with Amazon Personalize, rather it is a know issue with using age and gender to predict likes and dislikes of media.  Also, the single, compound genre certainly seems more accurate for the first 5 or 10 responses, but for the set of 25 response as a whole the multiple genre model probably gets a better list of movies than the compound one.
 
-# Closing Down Your Resources
-
-## Terminating the Notebook Instance
-
-1. Open the Amazon SageMaker console and click on **Notebook instances**
-2. Find the notebook instance listed as _[Name]-lab-notebook_, select its radio button and then click the **Actions** dropdown.
-
-![Terminate instance](images/terminateNotebook.png)
-
-3. Click **Stop** to stop the Notebook Instance.  This does not delete the underlying data and resources.  After a few minutes the instance status will change to _Stopped_, and you can now click on the **Actions** dropdown again, but this time select **Delete**.
-
-Note that by selecting the name of the Notebook instance on this dialog you are taken to a more detailed information page regarding that instance, which also has **Stop** and **Delete** buttons present – notebooks can also be deleted using this method.
 
 ## Conclusion
 
