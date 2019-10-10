@@ -148,6 +148,19 @@ Each of these modes allows multiple models of their type to be used, but each mo
 
 8. You can step through users to see how these look for different demographics of users.  If you had mutiple Recommendation models defined then they would also be in the two model drop-downs, and you'd be able to show two completely different recommendation models, based upon different user demographic or item metadata, allowing you to compare and contrast different approaches.
 
+## Conclusion
+
+Upon completion of this lab you will have performed the following:
+
+- Launched a Jupyter notebook from with the Amazon SageMaker service
+- Imported external files into the notebook environment
+- Seen how to enable Preview services within a notebook (assuming your account has been whitelisted for Preview access)
+- Used the **pandas** libraries to do some pre-processing of the source data
+- Built and deployed an ML model based upon the HRNN algorithm
+- Tested your model via just a few lines of code
+- Deployed your model into a live application
+
+You should now be able to embed this model from within your own application code, using any language that is supported by the AWS SDK.  Happy recommending!
 
 ## Additional Campaigns to Build
 
@@ -162,16 +175,3 @@ The three models that you should build are as follows:
 Observations are that demographics are absolutely not a good indicator for movies recommendations, nor for things like book recommendations - this isn't an issue with Amazon Personalize, rather it is a know issue with using age and gender to predict likes and dislikes of media.  Also, the single, compound genre certainly seems more accurate for the first 5 or 10 responses, but for the set of 25 response as a whole the multiple genre model probably gets a better list of movies than the compound one.
 
 
-## Conclusion
-
-Upon completion of this lab you will have performed the following:
-
-- Launched a Jupyter notebook from with the Amazon SageMaker service
-- Imported external files into the notebook environment
-- Seen how to enable Preview services within a notebook (assuming your account has been whitelisted for Preview access)
-- Used the **pandas** libraries to do some pre-processing of the source data
-- Built and deployed an ML model based upon the HRNN algorithm
-- Tested your model via just a few lines of code
-- Deployed your model into a live application
-
-You should now be able to embed this model from within your own application code, using any language that is supported by the AWS SDK.  Happy recommending!
