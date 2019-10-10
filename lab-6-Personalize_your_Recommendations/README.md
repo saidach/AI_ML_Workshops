@@ -47,9 +47,10 @@ This lab will walk you through the following:
 
 6. Copy and paste the value corresponding to AppEntrypoint in a new browser tab to make sure the app is working fine.
 
+
 ![Landing Page](images/Openappinbrowser.png)
 
-**Note: if you see 502 bad gateway click and open following link in new tab [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance with the name *"Amazon Personalize Lab"* as shown below**
+**Note: if you see 502 bad gateway error, click and open following link in new tab [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance with the name *"Amazon Personalize Lab"* as shown below**
 
 ![Landing Page](images/recycleinstance.png)
 
