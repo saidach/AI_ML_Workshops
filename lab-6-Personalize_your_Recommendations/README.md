@@ -50,7 +50,7 @@ This lab will walk you through the following:
 
 ![Landing Page](images/Openappinbrowser.png)
 
-**Note: if you see 502 bad gateway error, click and open following link in new tab: [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance with the name *"Amazon Personalize Lab"* as shown below**
+**Note: if you see 502 bad gateway error, click and open following link in new tab: [link](https://console.aws.amazon.com/ec2/home?region=us-east-1#Instances:sort=instanceId) and recycle the instance with the name *"Amazon Personalize Lab"* as shown below**, Terminating the instances lets the Autoscaling to replace the instance.
 
 ![Landing Page](images/recycleinstance.png)
 
@@ -152,9 +152,7 @@ Each of these modes allows multiple models of their type to be used, but each mo
 
 Upon completion of this lab you will have performed the following:
 
-- Launched a Jupyter notebook from with the Amazon SageMaker service
-- Imported external files into the notebook environment
-- Seen how to enable Preview services within a notebook (assuming your account has been whitelisted for Preview access)
+- Launched a Jupyter notebook from the Amazon SageMaker service
 - Used the **pandas** libraries to do some pre-processing of the source data
 - Built and deployed an ML model based upon the HRNN algorithm
 - Tested your model via just a few lines of code
